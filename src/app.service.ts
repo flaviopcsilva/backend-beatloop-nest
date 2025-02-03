@@ -7,7 +7,7 @@ export class AppService implements OnModuleInit {
     setInterval(async () => {
       try {
         // Enviar um "ping" para a rota /health para garantir que a API está ativa
-        await axios.get('https://painelbeatloop-backend.onrender.com');
+        await axios.get('https://backend-beatloop-nest.onrender.com');
         console.log('Ping enviado para manter a API ativa');
       } catch (error) {
         console.error('Erro ao enviar ping:', error);
