@@ -30,11 +30,13 @@
     "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
     "canvas": "^3.0.1",
+    "dotenv": "^16.4.7",
     "google-auth-library": "^9.15.0",
     "handlebars": "^4.7.8",
     "mysql2": "^3.11.4",
     "nodemailer": "^6.9.16",
     "nodemailer-express-handlebars": "^7.0.0",
+    "pg": "^8.13.1",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
     "typeorm": "^0.3.20"
