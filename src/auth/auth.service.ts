@@ -8,6 +8,7 @@ import { randomInt, verify } from 'crypto';
 import { EmailService } from './email.service';
 import { ProfileImageService } from "../profile-image/profile-image.service";
 import { OAuth2Client } from 'google-auth-library';
+import { join } from 'path';
 
 @Injectable()
 export class AuthService {
@@ -26,6 +27,8 @@ export class AuthService {
         return {
             id: user.id,
             name: user.name,
+            firstname: user.firstname,
+            lastName: user.lastname,
             email: user.email,
             photo: user.profileImage,
             verify: user.isVerified,
@@ -50,6 +53,8 @@ export class AuthService {
             // Após validar o id_token, envie as informações do usuário junto com o access token
             const userData = {
                 name: payload.name,
+                firstname: payload.given_name,
+                lastname: payload.family_name,
                 email: payload.email,
                 picture: payload.picture,
             };
@@ -61,7 +66,7 @@ export class AuthService {
     }
 
     async loginOrRegisterGoogleUser(userData: any) {
-        const { email, name, picture } = userData;
+        const { email, name, firstname, lastname, picture } = userData;
 
         // Verificar se o usuário já existe no banco
         let user = await this.userRepository.findOne({ where: { email } });
@@ -70,6 +75,8 @@ export class AuthService {
             // Se não encontrar o usuário, criar um novo
             user = this.userRepository.create({
                 name,
+                firstname,
+                lastname,
                 email,
                 password: 'n/a',
                 loginWith: 'google',
@@ -85,20 +92,23 @@ export class AuthService {
         const accessToken = this.jwtService.sign(payload);
 
         // Retornar tanto o access token quanto os dados do usuário
-        return { accessToken };
+        return { name, firstname, lastname, accessToken };
     }
 
 
 
-    async register(name: string, email: string, password: string): Promise<{ accessToken: string }> {
+    async register(name: string, email: string, password: string): Promise<{ message?: string; name?: string; firstname?: string; lastname?: string; accessToken?: string }> {
         try {
             if (!name || !email || !password) {
                 throw new BadRequestException('Missing required fields');
             }
 
+            //separando o firstname e lastname do campo name
+            const [firstname, ...lastname] = name.split(' ')
+
             const existingUser = await this.userRepository.findOne({ where: { email } });
             if (existingUser) {
-                throw new UnauthorizedException('Email already exists');
+                return ({ message: 'Email já foi cadastrado' });
             }
 
             const hashedPassword = await bcrypt.hash(password, 10);
@@ -109,6 +119,8 @@ export class AuthService {
 
             const user = this.userRepository.create({
                 name,
+                firstname,
+                lastname: lastname.join(' '),
                 email,
                 password: hashedPassword,
                 verificationCode,
@@ -125,8 +137,9 @@ export class AuthService {
 
             const payload = this.creatPayload(user);;
             const accessToken = this.jwtService.sign(payload);
+            const lastnameFormatted = lastname.length > 0 ? lastname.join(' ') : '';
 
-            return { accessToken };
+            return { name, firstname, lastname: lastnameFormatted, accessToken };
         } catch (error) {
             console.error('Erro durante o registro:', error);
             throw new InternalServerErrorException('Failed to register user');
@@ -245,7 +258,12 @@ export class AuthService {
             if (name.length < 3) {
                 throw new BadRequestException('The name must have at least 3 characters.');
             }
+            const [firstname, ...lastname] = name.split(' ')
+
             user.name = name;
+            user.firstname = firstname,
+                user.lastname = lastname.join(' ')
+
         }
 
         if (photo) {
