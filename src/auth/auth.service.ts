@@ -89,15 +89,15 @@ export class AuthService {
 
         // Gerar um JWT para o usuário
         const payload = this.creatPayload(user);
-        const accessToken = this.jwtService.sign(payload);
+        const token = this.jwtService.sign(payload);
 
         // Retornar tanto o access token quanto os dados do usuário
-        return { name, firstname, lastname, accessToken };
+        return { name, firstname, lastname, token };
     }
 
 
 
-    async register(name: string, email: string, password: string): Promise<{ message?: string; name?: string; firstname?: string; lastname?: string; accessToken?: string }> {
+    async register(name: string, email: string, password: string): Promise<{ message?: string; name?: string; firstname?: string; lastname?: string; token?: string }> {
         try {
             if (!name || !email || !password) {
                 throw new BadRequestException('Missing required fields');
@@ -136,10 +136,10 @@ export class AuthService {
             await this.userRepository.save(user);
 
             const payload = this.creatPayload(user);;
-            const accessToken = this.jwtService.sign(payload);
+            const token = this.jwtService.sign(payload);
             const lastnameFormatted = lastname.length > 0 ? lastname.join(' ') : '';
 
-            return { name, firstname, lastname: lastnameFormatted, accessToken };
+            return { name, firstname, lastname: lastnameFormatted, token };
         } catch (error) {
             console.error('Erro durante o registro:', error);
             throw new InternalServerErrorException('Failed to register user');
@@ -148,7 +148,7 @@ export class AuthService {
 
 
 
-    async login(email: string, password: string): Promise<{ accessToken: string }> {
+    async login(email: string, password: string): Promise<{ token: string }> {
         const user = await this.userRepository.findOne({ where: { email } });
 
         if (!user) {
@@ -171,12 +171,14 @@ export class AuthService {
 
 
         const payload = this.creatPayload(user);
-        const accessToken = this.jwtService.sign(payload);
+        const token = this.jwtService.sign(payload);
 
-        return { accessToken };
+        return { token };
     }
 
-    async verifyCode(email: string, code: string): Promise<{ accessToken: string }> {
+    async verifyCode(email: string, code: string): Promise<{ token: string }> {
+
+
         const user = await this.userRepository.findOne({ where: { email } });
         if (!user) {
             throw new BadRequestException('User not found');
@@ -201,9 +203,9 @@ export class AuthService {
         await this.userRepository.save(user);
 
         const payload = this.creatPayload(user);
-        const accessToken = this.jwtService.sign(payload);
+        const token = this.jwtService.sign(payload);
 
-        return { accessToken };
+        return { token };
     }
 
     async reenviarCode(email: string) {
@@ -280,9 +282,9 @@ export class AuthService {
 
 
         const payload = this.creatPayload(user);
-        const accessToken = this.jwtService.sign(payload);
+        const token = this.jwtService.sign(payload);
         console.log(payload)
 
-        return { message: 'Alterações salvas com sucesso!', accessToken }
+        return { message: 'Alterações salvas com sucesso!', token }
     }
 }
